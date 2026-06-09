@@ -10,7 +10,6 @@ export default function KitchenMonitor({ session }) {
   const ITEMS_PER_PAGE = 8;
 
   const fetchOrders = async () => {
-    // ... (logic remains same)
     const { data, error } = await supabase
       .from('commandes')
       .select(`
@@ -66,7 +65,6 @@ export default function KitchenMonitor({ session }) {
     setLoading(false);
   };
   
-  // Filter and Paginate
   const filteredOrders = orders.filter(o => o.table_name.toLowerCase().includes(searchTerm.toLowerCase()));
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
   const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -80,11 +78,127 @@ export default function KitchenMonitor({ session }) {
     return () => supabase.removeChannel(channel);
   }, []);
 
-  // ... (updateStatus remains same)
+  const updateStatus = async (orderReference, newStatus) => {
+    if (newStatus === 'cancelled') {
+        const { data: orderData } = await supabase
+            .from('commandes')
+            .select('commande_items(item_id, item_type, quantity)')
+            .eq('order_reference', orderReference)
+            .single();
+
+        if (orderData && orderData.commande_items) {
+            for (const item of orderData.commande_items) {
+                if (item.item_type === 'product') {
+                    const { data: stockData } = await supabase
+                        .from('stocks')
+                        .select('id, quantity')
+                        .eq('product_id', item.item_id)
+                        .maybeSingle();
+
+                    if (stockData) {
+                        await supabase
+                            .from('stocks')
+                            .update({ quantity: Number(stockData.quantity) + Number(item.quantity) })
+                            .eq('id', stockData.id);
+                    }
+                }
+            }
+        }
+    }
+
+    const { error } = await supabase
+      .from('commandes')
+      .update({ status: newStatus })
+      .eq('order_reference', orderReference);
+
+    if (error) {
+      alert("Erreur lors de la mise à jour : " + error.message);
+    } else {
+        const message = newStatus === 'cancelled' ? "Commande annulée !" : "Commande prête !";
+        const toast = document.createElement('div');
+        toast.className = `fixed top-5 right-5 px-8 py-5 rounded-[2rem] font-black text-white shadow-2xl z-[200] animate-in slide-in-from-top-4 duration-300 ${newStatus === 'cancelled' ? 'bg-gray-900 border-2 border-white/10' : 'bg-emerald-600 border-4 border-emerald-500 shadow-emerald-500/40'}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+            fetchOrders();
+        }, 2500);
+    }
+  };
+
+  function OrderCard({ order, onAction, actionLabel, actionColor, onCancel }) {
+    const timeElapsed = Math.floor((new Date() - new Date(order.created_at)) / 60000);
+    const [loadingAction, setLoadingAction] = useState(null);
+
+    const handleAction = async (actionFn) => {
+        setLoadingAction(actionFn === onCancel ? 'cancel' : 'ready');
+        await actionFn();
+        setLoadingAction(null);
+    };
+    
+    return (
+        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col min-h-[350px] transition-all hover:shadow-lg hover:border-red-100 overflow-hidden">
+        
+        {/* Card Header */}
+        <div className={`p-5 flex justify-between items-start ${timeElapsed > 15 ? 'bg-red-50' : 'bg-gray-50'}`}>
+            <div>
+            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Table</span>
+            <div className="text-2xl font-black text-gray-900 leading-none tracking-tighter uppercase">{order.table_name}</div>
+            </div>
+            <div className={`flex items-center gap-1.5 font-black text-[10px] px-3 py-1 rounded-full ${
+            timeElapsed > 15 ? 'bg-red-600 text-white' : 'bg-white text-gray-500 border border-gray-200'
+            }`}>
+            <Clock size={12} /> {timeElapsed} min
+            </div>
+        </div>
+
+        {/* Card Items */}
+        <div className="flex-1 p-5 space-y-3 overflow-y-auto no-scrollbar">
+            {order.commande_items?.map(item => (
+            <div key={item.id} className={`flex justify-between items-center gap-3 p-3 rounded-xl border ${item.is_additional ? 'bg-orange-50 border-orange-100' : 'bg-white border-gray-50'}`}>
+                <div className="flex flex-col">
+                <span className="font-bold text-gray-800 text-xs uppercase tracking-tight">
+                    {item.produits?.name || 'Menu'}
+                </span>
+                {item.is_additional && (
+                    <span className="text-[8px] font-black text-orange-600 uppercase mt-0.5">Ajout</span>
+                )}
+                </div>
+                <span className="bg-gray-900 text-white px-2 py-1 rounded-lg font-black text-[10px]">x{item.quantity}</span>
+            </div>
+            ))}
+        </div>
+
+        {/* Card Footer */}
+        <div className="p-4 grid grid-cols-2 gap-3 shrink-0">
+            <button 
+                onClick={() => handleAction(onCancel)}
+                disabled={loadingAction !== null}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] transition-colors flex items-center justify-center gap-2"
+            >
+                {loadingAction === 'cancel' ? <Loader2 className="animate-spin" size={14} /> : (
+                    <span className="group-hover:scale-110 transition-transform">Annuler</span>
+                )}
+            </button>
+            <button 
+            onClick={() => handleAction(onAction)}
+            disabled={loadingAction !== null}
+            className={`${actionColor} hover:brightness-105 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center justify-center gap-2 transition-all`}
+            >
+            {loadingAction === 'ready' ? <Loader2 className="animate-spin" size={14} /> : (
+                <>
+                <CheckCircle2 size={14} />
+                {actionLabel}
+                </>
+            )}
+            </button>
+        </div>
+        </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden font-sans">
-      {/* Header */}
       <header className="bg-white border-b border-gray-100 p-6 flex items-center justify-between shadow-sm shrink-0">
         <div className="flex items-center gap-4">
           <div className="bg-gradient-to-br from-red-600 to-red-700 p-3 rounded-2xl shadow-lg shadow-red-200">
@@ -96,7 +210,6 @@ export default function KitchenMonitor({ session }) {
           </div>
         </div>
         
-        {/* Search */}
         <div className="flex items-center gap-4">
           <input 
             type="text" 
@@ -112,7 +225,6 @@ export default function KitchenMonitor({ session }) {
         </div>
       </header>
 
-      {/* Main Grid */}
       <main className="flex-1 overflow-y-auto p-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 content-start">
           {paginatedOrders.map(order => (
@@ -134,7 +246,6 @@ export default function KitchenMonitor({ session }) {
         </div>
       </main>
       
-      {/* Pagination */}
       {totalPages > 1 && (
         <footer className="p-4 bg-white border-t border-gray-100 flex justify-center items-center gap-4">
           <button 
@@ -154,76 +265,6 @@ export default function KitchenMonitor({ session }) {
           </button>
         </footer>
       )}
-    </div>
-  );
-}
-// ... (OrderCard remains the same)
-
-function OrderCard({ order, onAction, actionLabel, actionColor, onCancel }) {
-  const timeElapsed = Math.floor((new Date() - new Date(order.created_at)) / 60000);
-  const [loadingAction, setLoadingAction] = useState(null);
-
-  const handleAction = async (actionFn) => {
-    setLoadingAction(actionFn === onCancel ? 'cancel' : 'ready');
-    await actionFn();
-    setLoadingAction(null);
-  };
-  
-  return (
-    <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 flex flex-col min-h-[350px] transition-all hover:shadow-lg hover:border-red-100 overflow-hidden">
-      
-      {/* Card Header - Clean and functional */}
-      <div className={`p-5 flex justify-between items-start ${timeElapsed > 15 ? 'bg-red-50' : 'bg-gray-50'}`}>
-        <div>
-          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">Table</span>
-          <div className="text-2xl font-black text-gray-900 leading-none tracking-tighter uppercase">{order.table_name}</div>
-        </div>
-        <div className={`flex items-center gap-1.5 font-black text-[10px] px-3 py-1 rounded-full ${
-          timeElapsed > 15 ? 'bg-red-600 text-white' : 'bg-white text-gray-500 border border-gray-200'
-        }`}>
-          <Clock size={12} /> {timeElapsed} min
-        </div>
-      </div>
-
-      {/* Card Items - Elegant list */}
-      <div className="flex-1 p-5 space-y-3 overflow-y-auto no-scrollbar">
-        {order.commande_items?.map(item => (
-          <div key={item.id} className={`flex justify-between items-center gap-3 p-3 rounded-xl border ${item.is_additional ? 'bg-orange-50 border-orange-100' : 'bg-white border-gray-50'}`}>
-            <div className="flex flex-col">
-              <span className="font-bold text-gray-800 text-xs uppercase tracking-tight">
-                {item.produits?.name || 'Menu'}
-              </span>
-              {item.is_additional && (
-                  <span className="text-[8px] font-black text-orange-600 uppercase mt-0.5">Ajout</span>
-              )}
-            </div>
-            <span className="bg-gray-900 text-white px-2 py-1 rounded-lg font-black text-[10px]">x{item.quantity}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Card Footer - Minimalist Actions */}
-      <div className="p-4 grid grid-cols-2 gap-3 shrink-0">
-        <button 
-          onClick={() => handleAction(onCancel)}
-          disabled={loadingAction !== null}
-          className="bg-gray-100 hover:bg-gray-200 text-gray-500 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] transition-colors"
-        >
-          Annuler
-        </button>
-        <button 
-          onClick={() => handleAction(onAction)}
-          disabled={loadingAction !== null}
-          className={`${actionColor} hover:brightness-105 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[9px] flex items-center justify-center gap-2 transition-all`}
-        >
-          {loadingAction === 'ready' ? <Loader2 className="animate-spin" size={14} /> : (
-            <>
-              <CheckCircle2 size={14} />
-              {actionLabel}
-            </>
-          )}
-        </button>
-      </div>
     </div>
   );
 }
