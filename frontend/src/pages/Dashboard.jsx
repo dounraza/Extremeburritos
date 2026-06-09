@@ -54,6 +54,7 @@ import OrderTaker from '../components/OrderTaker';
 import KitchenMonitor from '../components/KitchenMonitor';
 import RestaurantPOS from '../components/RestaurantPOS';
 import MenuManager from '../components/MenuManager';
+import UserManagement from '../components/UserManagement';
 
 export default function Dashboard({ session }) {
   const navigate = useNavigate();
@@ -86,6 +87,26 @@ export default function Dashboard({ session }) {
   const [adminAuthCode, setAdminAuthCode] = useState('');
   const [dbAdminCode, setDbAdminCode] = useState(null);
   const [pendingNavigation, setPendingNavigation] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!session?.user?.id) return;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setUserRole(data.role);
+      } else {
+        // Default role if not found
+        setUserRole('serveur'); 
+      }
+    };
+    fetchUserRole();
+  }, [session]);
 
   useEffect(() => {
     const fetchAdminCode = async () => {
@@ -264,188 +285,196 @@ export default function Dashboard({ session }) {
           </div>
 
           <nav className="flex-1 space-y-8 overflow-y-auto px-4 no-scrollbar pb-10">
-            {/* GROUPE 1: Caisse & Ventes */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Caisse & Ventes</p>
-              <div className="space-y-1">
-                {/* <NavItem icon={<LayoutDashboard size={20} />} label="Tableau de bord" active={activeTab === 'dashboard'} onClick={() => { navigate('/dashboard'); closeSidebar(); }} /> */}
-                <NavItem icon={<ShoppingCart size={20} />} label="Caisse Resto" active={activeTab === 'restaurant-pos'} onClick={() => { navigate('/dashboard/restaurant-pos'); closeSidebar(); }} />
-                {/* <NavItem icon={<ShoppingCart size={20} />} label="Caisse Simple" active={activeTab === 'pos-simple'} onClick={() => { navigate('/dashboard/pos-simple'); closeSidebar(); }} /> */}
-                
-                <NavItem icon={<TrendingUp size={20} />} label="Résultat Journalière" active={activeTab === 'sales-analytics'} onClick={() => { navigate('/dashboard/sales-analytics'); closeSidebar(); }} />
+            {/* GROUPE 1: Caisse & Ventes (superAdmin or Caissier) */}
+            {(userRole === 'superAdmin' || userRole?.startsWith('Caissier')) && (
+              <div>
+                <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Caisse & Ventes</p>
+                <div className="space-y-1">
+                  <NavItem icon={<ShoppingCart size={20} />} label="Caisse Resto" active={activeTab === 'restaurant-pos'} onClick={() => { navigate('/dashboard/restaurant-pos'); closeSidebar(); }} />
+                  <NavItem icon={<TrendingUp size={20} />} label="Résultat Journalière" active={activeTab === 'sales-analytics'} onClick={() => { navigate('/dashboard/sales-analytics'); closeSidebar(); }} />
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* RESTAURANT SECTION */}
+            {/* RESTAURANT SECTION (superAdmin, serveur, cuisine, Caissier) */}
             <div>
               <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Restaurant Extrême Buritos</p>
               <div className="space-y-1">
-                 <NavItem icon={<LayoutDashboard size={20} />} label="Gestion Menus" active={activeTab === 'menus'} onClick={() => { navigate('/dashboard/menus'); closeSidebar(); }} />
-                <NavItem icon={<Utensils size={20} />} label="Prise de Commande" active={activeTab === 'restaurant-order'} onClick={() => { navigate('/dashboard/restaurant-order'); closeSidebar(); }} />
-                <NavItem icon={<Clock size={20} />} label="Cuisine" active={activeTab === 'restaurant-kitchen'} onClick={() => { navigate('/dashboard/restaurant-kitchen'); closeSidebar(); }} />
-               
-                {/* <NavItem icon={<CreditCard size={20} />} label="Caisse Resto" active={activeTab === 'restaurant-pos'} onClick={() => { navigate('/dashboard/restaurant-pos'); closeSidebar(); }} /> */}
-              </div>
-            </div>
-
-            {/* GROUPE 2: Gestion Financière */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Gestion Financière</p>
-              <div className="space-y-1">
-                <NavItem icon={<FileText size={20} />} label="Facturation" active={activeTab === 'billing'} onClick={() => { navigate('/dashboard/billing'); closeSidebar(); }} />
-                <NavItem icon={<DollarSign size={20} />} label="Décaissements" active={activeTab === 'decaissement'} onClick={() => { navigate('/dashboard/decaissement'); closeSidebar(); }} />
-              </div>
-            </div>
-
-            {/* GROUPE 3: Clients */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Clients</p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => setIsClientsOpen(!isClientsOpen)}
-                  className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
-                    ['clients', 'credit_history', 'deadlines'].includes(activeTab)
-                      ? 'bg-red-600 text-white shadow-lg' 
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <Users size={20} />
-                    <span className="font-bold text-lg tracking-tight">Menu Client</span>
-                  </div>
-                  <ChevronDown size={16} className={`transition-transform ${isClientsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isClientsOpen && (
-                  <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
-                    <button 
-                      onClick={() => { navigate('/dashboard/clients'); closeSidebar(); }}
-                      className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'clients' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                      Liste
-                    </button>
-                    <button
-                     onClick={() => { navigate('/dashboard/credit_history'); closeSidebar(); }}
-                     className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'credit_history' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                     Historique client
-                    </button>
-                    <button
-                     onClick={() => { navigate('/dashboard/deadlines'); closeSidebar(); }}
-                     className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'deadlines' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                     Echéancier
-                    </button>                  </div>
+                {(userRole === 'superAdmin') && (
+                  <NavItem icon={<LayoutDashboard size={20} />} label="Gestion Menus" active={activeTab === 'menus'} onClick={() => { navigate('/dashboard/menus'); closeSidebar(); }} />
+                )}
+                {(userRole === 'superAdmin' || userRole === 'serveur') && (
+                  <NavItem icon={<Utensils size={20} />} label="Prise de Commande" active={activeTab === 'restaurant-order'} onClick={() => { navigate('/dashboard/restaurant-order'); closeSidebar(); }} />
+                )}
+                {(userRole === 'superAdmin' || userRole === 'cuisine') && (
+                  <NavItem icon={<Clock size={20} />} label="Cuisine" active={activeTab === 'restaurant-kitchen'} onClick={() => { navigate('/dashboard/restaurant-kitchen'); closeSidebar(); }} />
                 )}
               </div>
             </div>
 
-            {/* GROUPE 4: Fournisseurs */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Fournisseurs</p>
-              <div className="space-y-1">
-                <button 
-                  onClick={() => setIsSuppliersOpen(!isSuppliersOpen)}
-                  className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
-                    ['suppliers', 'supplier-history', 'supplier_credits'].includes(activeTab)
-                      ? 'bg-red-600 text-white shadow-lg' 
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <Users size={20} />
-                    <span className="font-bold text-lg tracking-tight">Menu Fournisseur</span>
+            {/* GROUPE 2: Gestion Financière (superAdmin only) */}
+            {userRole === 'superAdmin' && (
+              <>
+                <div>
+                  <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Gestion Financière</p>
+                  <div className="space-y-1">
+                    <NavItem icon={<FileText size={20} />} label="Facturation" active={activeTab === 'billing'} onClick={() => { navigate('/dashboard/billing'); closeSidebar(); }} />
+                    <NavItem icon={<DollarSign size={20} />} label="Décaissements" active={activeTab === 'decaissement'} onClick={() => { navigate('/dashboard/decaissement'); closeSidebar(); }} />
                   </div>
-                  <ChevronDown size={16} className={`transition-transform ${isSuppliersOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isSuppliersOpen && (
-                  <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
-                    <button 
-                      onClick={() => { navigate('/dashboard/suppliers'); closeSidebar(); }}
-                      className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'suppliers' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                      Liste Fournisseurs
-                    </button>
-                    <button 
-                      onClick={() => { navigate('/dashboard/supplier_credits'); closeSidebar(); }}
-                      className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'supplier_credits' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                    >
-                      Crédit Fournisseurs
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* GROUPE 4: Stock & Logistique */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Stock & Logistique</p>
-              <div className="space-y-1">
-                <div className="space-y-1">
-                  <button 
-                    onClick={() => setIsInventoryOpen(!isInventoryOpen)}
-                    className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
-                      ['inventory', 'products', 'stock-entry', 'historique'].includes(activeTab)
-                        ? 'bg-red-600 text-white shadow-lg' 
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <Package size={20} />
-                      <span className="font-bold text-lg tracking-tight">Gestion Stock</span>
-                    </div>
-                    <ChevronDown size={16} className={`transition-transform ${isInventoryOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {isInventoryOpen && (
-                    <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
-                      <button 
-                        onClick={() => handleProtectedNavigation('/dashboard/products')}
-                        className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'products' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                      >
-                        Stock Principal
-                      </button>
-                      <button 
-                        onClick={() => handleProtectedNavigation('/dashboard/inventory')}
-                        className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'inventory' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                      >
-                        Stock par Dépôt
-                      </button>
-                      <button 
-                        onClick={() => handleProtectedNavigation('/dashboard/stock-entry')}
-                        className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'stock-entry' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                      >
-                        Entrée de Stock
-                      </button>
-                      <button 
-                        onClick={() => handleProtectedNavigation('/dashboard/historique')}
-                        className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'historique' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                      >
-                        Historique
-                      </button>
-                      <button 
-                        onClick={() => handleProtectedNavigation('/dashboard/stock-transfer')}
-                        className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'stock-transfer' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
-                      >
-                        Transfert
-                      </button>
-                    </div>
-                  )}
                 </div>
-                <NavItem icon={<Box size={20} />} label="Conversions" active={activeTab === 'conversions'} onClick={() => { navigate('/dashboard/conversions'); closeSidebar(); }} />
-                <NavItem icon={<Tag size={20} />} label="Catégories" active={activeTab === 'categories'} onClick={() => { navigate('/dashboard/categories'); closeSidebar(); }} />
-                <NavItem icon={<Building2 size={20} />} label="Dépôts" active={activeTab === 'depots'} onClick={() => { navigate('/dashboard/depots'); closeSidebar(); }} />
-              </div>
-            </div>
 
-            {/* GROUPE 4: Système */}
-            <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Système</p>
-              <div className="space-y-1">
-                <NavItem icon={<SettingsIcon size={20} />} label="Paramètres" active={activeTab === 'settings'} onClick={() => { navigate('/dashboard/settings'); closeSidebar(); }} />
-              </div>
-            </div>
+                {/* GROUPE 3: Clients */}
+                <div>
+                  <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Clients</p>
+                  <div className="space-y-1">
+                    <button 
+                      onClick={() => setIsClientsOpen(!isClientsOpen)}
+                      className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
+                        ['clients', 'credit_history', 'deadlines'].includes(activeTab)
+                          ? 'bg-red-600 text-white shadow-lg' 
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Users size={20} />
+                        <span className="font-bold text-lg tracking-tight">Menu Client</span>
+                      </div>
+                      <ChevronDown size={16} className={`transition-transform ${isClientsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isClientsOpen && (
+                      <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
+                        <button 
+                          onClick={() => { navigate('/dashboard/clients'); closeSidebar(); }}
+                          className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'clients' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                          Liste
+                        </button>
+                        <button
+                         onClick={() => { navigate('/dashboard/credit_history'); closeSidebar(); }}
+                         className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'credit_history' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                         Historique client
+                        </button>
+                        <button
+                         onClick={() => { navigate('/dashboard/deadlines'); closeSidebar(); }}
+                         className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'deadlines' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                         Echéancier
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* GROUPE 4: Fournisseurs */}
+                <div>
+                  <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Fournisseurs</p>
+                  <div className="space-y-1">
+                    <button 
+                      onClick={() => setIsSuppliersOpen(!isSuppliersOpen)}
+                      className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
+                        ['suppliers', 'supplier-history', 'supplier_credits'].includes(activeTab)
+                          ? 'bg-red-600 text-white shadow-lg' 
+                          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Users size={20} />
+                        <span className="font-bold text-lg tracking-tight">Menu Fournisseur</span>
+                      </div>
+                      <ChevronDown size={16} className={`transition-transform ${isSuppliersOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isSuppliersOpen && (
+                      <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
+                        <button 
+                          onClick={() => { navigate('/dashboard/suppliers'); closeSidebar(); }}
+                          className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'suppliers' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                          Liste Fournisseurs
+                        </button>
+                        <button 
+                          onClick={() => { navigate('/dashboard/supplier_credits'); closeSidebar(); }}
+                          className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'supplier_credits' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                        >
+                          Crédit Fournisseurs
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* GROUPE 4: Stock & Logistique */}
+                <div>
+                  <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Stock & Logistique</p>
+                  <div className="space-y-1">
+                    <div className="space-y-1">
+                      <button 
+                        onClick={() => setIsInventoryOpen(!isInventoryOpen)}
+                        className={`flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all w-full text-left ${
+                          ['inventory', 'products', 'stock-entry', 'historique'].includes(activeTab)
+                            ? 'bg-red-600 text-white shadow-lg' 
+                            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Package size={20} />
+                          <span className="font-bold text-lg tracking-tight">Gestion Stock</span>
+                        </div>
+                        <ChevronDown size={16} className={`transition-transform ${isInventoryOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {isInventoryOpen && (
+                        <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-700 pl-4">
+                          <button 
+                            onClick={() => handleProtectedNavigation('/dashboard/products')}
+                            className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'products' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                          >
+                            Stock Principal
+                          </button>
+                          <button 
+                            onClick={() => handleProtectedNavigation('/dashboard/inventory')}
+                            className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'inventory' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                          >
+                            Stock par Dépôt
+                          </button>
+                          <button 
+                            onClick={() => handleProtectedNavigation('/dashboard/stock-entry')}
+                            className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'stock-entry' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                          >
+                            Entrée de Stock
+                          </button>
+                          <button 
+                            onClick={() => handleProtectedNavigation('/dashboard/historique')}
+                            className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'historique' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                          >
+                            Historique
+                          </button>
+                          <button 
+                            onClick={() => handleProtectedNavigation('/dashboard/stock-transfer')}
+                            className={`block w-full text-left px-4 py-2 rounded-xl text-lg font-bold transition-all ${activeTab === 'stock-transfer' ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}
+                          >
+                            Transfert
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <NavItem icon={<Box size={20} />} label="Conversions" active={activeTab === 'conversions'} onClick={() => { navigate('/dashboard/conversions'); closeSidebar(); }} />
+                    <NavItem icon={<Tag size={20} />} label="Catégories" active={activeTab === 'categories'} onClick={() => { navigate('/dashboard/categories'); closeSidebar(); }} />
+                    <NavItem icon={<Building2 size={20} />} label="Dépôts" active={activeTab === 'depots'} onClick={() => { navigate('/dashboard/depots'); closeSidebar(); }} />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Système</p>
+                  <div className="space-y-1">
+                    <NavItem icon={<Users size={20} />} label="Utilisateurs & Accès" active={activeTab === 'user-management'} onClick={() => { navigate('/dashboard/user-management'); closeSidebar(); }} />
+                    <NavItem icon={<SettingsIcon size={20} />} label="Paramètres" active={activeTab === 'settings'} onClick={() => { navigate('/dashboard/settings'); closeSidebar(); }} />
+                  </div>
+                </div>
+              </>
+            )}
           </nav>
         </div>
 
@@ -456,7 +485,12 @@ export default function Dashboard({ session }) {
             </div>
             <div className="overflow-hidden">
               <p className="text-lg font-bold text-white truncate">{session.user.email.split('@')[0]}</p>
-              <p className="text-[14px] text-red-500 font-bold uppercase tracking-wider">Gestionnaire Stock</p>
+              <p className="text-[14px] text-red-500 font-bold uppercase tracking-wider">
+                {userRole === 'superAdmin' ? 'Super Administrateur' : 
+                 userRole === 'serveur' ? 'Serveur' :
+                 userRole === 'cuisine' ? 'Cuisine' :
+                 userRole?.startsWith('Caissier') ? 'Caissier' : 'Personnel'}
+              </p>
             </div>
           </div>
           <button 
@@ -577,121 +611,153 @@ export default function Dashboard({ session }) {
         <div className={`flex-1 overflow-hidden ${['pos', 'pos-simple', 'restaurant-order', 'restaurant-kitchen', 'restaurant-pos'].includes(activeTab) ? '' : 'p-4 md:p-6'}`}>
           <Routes>
             <Route path="/" element={
-              <div className="h-full overflow-y-auto pr-2 space-y-6 md:space-y-8">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                  <StatCard 
-                    title="Ventes Menu" 
-                    value={`${(stats?.totalSales || 0).toLocaleString('fr-MG')} MGA`} 
-                    trend="+ Actuel" 
-                    icon={<TrendingUp className="text-red-600" size={24} />} 
-                  />
-                  <StatCard 
-                    title="Crédits Clients (Restant)" 
-                    value={`${(stats?.totalClientCredits || 0).toLocaleString('fr-MG')} MGA`} 
-                    trend="À encaisser" 
-                    negative={true}
-                    icon={<ArrowRightLeft className="text-orange-600" size={24} />} 
-                  />
-                  <StatCard 
-                    title="Crédits Fournisseurs" 
-                    value={`${(stats?.totalSupplierCredits || 0).toLocaleString('fr-MG')} MGA`} 
-                    trend="À payer" 
-                    negative={true}
-                    icon={<Truck className="text-red-600" size={24} />} 
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                  <StatCard 
-                    title="Alertes Stock" 
-                    value={`${stats?.stockAlerts || 0} articles`} 
-                    trend={(stats?.stockAlerts || 0) > 0 ? "Réapprovisionner" : "Correct"} 
-                    negative={(stats?.stockAlerts || 0) > 0} 
-                    icon={<AlertCircle className={(stats?.stockAlerts || 0) > 0 ? "text-orange-600" : "text-gray-400"} size={24} />} 
-                  />
-                  <StatCard 
-                    title="Factures payées" 
-                    value={`${stats?.paidInvoices || 0}`} 
-                    trend="Historique" 
-                    icon={<CheckCircle2 className="text-red-600" size={24} />} 
-                  />
-                   <StatCard 
-                    title="Crédits en retard" 
-                    value={`${stats?.overdueCredits || 0}`} 
-                    trend="Urgent" 
-                    negative={true}
-                    icon={<Clock className="text-red-600" size={24} />} 
-                  />
-                </div>
-
-                {/* Recent Activity Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-                  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                      <Package size={20} className="text-red-600" /> État du Stock
-                    </h3>
-                    <p className="text-gray-500 text-lg text-center py-10 font-medium">
-                      {stats.stockAlerts > 0 
-                        ? `Attention : ${stats.stockAlerts} produits sont en dessous du seuil critique.` 
-                        : "Tout votre stock est actuellement suffisant."}
-                    </p>
-                    <button 
-                      onClick={() => handleProtectedNavigation('/dashboard/inventory')}
-                      className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors"
-                    >
-                      Gérer l'inventaire
-                    </button>
+              userRole === 'superAdmin' ? (
+                <div className="h-full overflow-y-auto pr-2 space-y-6 md:space-y-8">
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <StatCard 
+                      title="Ventes Menu" 
+                      value={`${(stats?.totalSales || 0).toLocaleString('fr-MG')} MGA`} 
+                      trend="+ Actuel" 
+                      icon={<TrendingUp className="text-red-600" size={24} />} 
+                    />
+                    <StatCard 
+                      title="Crédits Clients (Restant)" 
+                      value={`${(stats?.totalClientCredits || 0).toLocaleString('fr-MG')} MGA`} 
+                      trend="À encaisser" 
+                      negative={true}
+                      icon={<ArrowRightLeft className="text-orange-600" size={24} />} 
+                    />
+                    <StatCard 
+                      title="Crédits Fournisseurs" 
+                      value={`${(stats?.totalSupplierCredits || 0).toLocaleString('fr-MG')} MGA`} 
+                      trend="À payer" 
+                      negative={true}
+                      icon={<Truck className="text-red-600" size={24} />} 
+                    />
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-                      <Calendar size={20} className="text-red-600" /> Échéancier & Crédits
-                    </h3>
-                    <p className="text-gray-500 text-lg text-center py-10 font-medium">
-                      {stats.pendingInvoices > 0 
-                        ? `Vous avez ${stats.pendingInvoices} ventes à crédit en attente de paiement.` 
-                        : "Toutes vos factures récentes sont réglées."}
-                    </p>
-                    <button 
-                      onClick={() => navigate('/dashboard/deadlines')}
-                      className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors"
-                    >
-                      Voir l'échéancier
-                    </button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <StatCard 
+                      title="Alertes Stock" 
+                      value={`${stats?.stockAlerts || 0} articles`} 
+                      trend={(stats?.stockAlerts || 0) > 0 ? "Réapprovisionner" : "Correct"} 
+                      negative={(stats?.stockAlerts || 0) > 0} 
+                      icon={<AlertCircle className={(stats?.stockAlerts || 0) > 0 ? "text-orange-600" : "text-gray-400"} size={24} />} 
+                    />
+                    <StatCard 
+                      title="Factures payées" 
+                      value={`${stats?.paidInvoices || 0}`} 
+                      trend="Historique" 
+                      icon={<CheckCircle2 className="text-red-600" size={24} />} 
+                    />
+                     <StatCard 
+                      title="Crédits en retard" 
+                      value={`${stats?.overdueCredits || 0}`} 
+                      trend="Urgent" 
+                      negative={true}
+                      icon={<Clock className="text-red-600" size={24} />} 
+                    />
+                  </div>
+
+                  {/* Recent Activity Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                    <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+                      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <Package size={20} className="text-red-600" /> État du Stock
+                      </h3>
+                      <p className="text-gray-500 text-lg text-center py-10 font-medium">
+                        {stats.stockAlerts > 0 
+                          ? `Attention : ${stats.stockAlerts} produits sont en dessous du seuil critique.` 
+                          : "Tout votre stock est actuellement suffisant."}
+                      </p>
+                      <button 
+                        onClick={() => handleProtectedNavigation('/dashboard/inventory')}
+                        className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors"
+                      >
+                        Gérer l'inventaire
+                      </button>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+                      <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <Calendar size={20} className="text-red-600" /> Échéancier & Crédits
+                      </h3>
+                      <p className="text-gray-500 text-lg text-center py-10 font-medium">
+                        {stats.pendingInvoices > 0 
+                          ? `Vous avez ${stats.pendingInvoices} ventes à crédit en attente de paiement.` 
+                          : "Toutes vos factures récentes sont réglées."}
+                      </p>
+                      <button 
+                        onClick={() => navigate('/dashboard/deadlines')}
+                        className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors"
+                      >
+                        Voir l'échéancier
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : userRole === 'serveur' ? (
+                <Navigate to="/dashboard/restaurant-order" replace />
+              ) : userRole === 'cuisine' ? (
+                <Navigate to="/dashboard/restaurant-kitchen" replace />
+              ) : userRole?.startsWith('Caissier') ? (
+                <Navigate to="/dashboard/restaurant-pos" replace />
+              ) : (
+                <div className="flex items-center justify-center h-full">Chargement...</div>
+              )
             } />
+            
+            {/* Protected Routes */}
+            <Route path="restaurant-order" element={
+              (userRole === 'superAdmin' || userRole === 'serveur') 
+                ? <OrderTaker session={session} selectedDepotId={selectedDepotId} />
+                : <Navigate to="/dashboard" replace />
+            } />
+            <Route path="restaurant-kitchen" element={
+              (userRole === 'superAdmin' || userRole === 'cuisine') 
+                ? <KitchenMonitor session={session} />
+                : <Navigate to="/dashboard" replace />
+            } />
+            <Route path="restaurant-pos" element={
+              (userRole === 'superAdmin' || userRole?.startsWith('Caissier')) 
+                ? <RestaurantPOS session={session} selectedDepotId={selectedDepotId} />
+                : <Navigate to="/dashboard" replace />
+            } />
+            
+            {/* Admin Only Routes */}
+            {userRole === 'superAdmin' && (
+              <>
+                <Route path="menus" element={<MenuManager />} />
+                <Route path="products" element={<ProductList />} />
+                <Route path="inventory" element={<Inventory selectedDepotId={selectedDepotId} />} />
+                <Route path="stock-entry" element={<StockEntry />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="clients" element={<Clients onViewCredit={handleViewClientCredit} />} />
+                <Route path="suppliers" element={<Suppliers />} />
+                <Route path="supplier-history" element={<SupplierCreditHistory />} />
+                <Route path="billing" element={<Billing 
+                  initialSearchTerm={billingSearchTerm} 
+                  onSearchReset={() => setBillingSearchTerm('')} 
+                />} />
+                <Route path="deadlines" element={<Deadlines 
+                  initialSearchTerm={deadlineSearchTerm}
+                  onSearchReset={() => setDeadlineSearchTerm('')}
+                />} />
+                <Route path="credit_history" element={<CreditHistory />} />
+                <Route path="supplier_credits" element={<SupplierCredits />} />
+                <Route path="decaissement" element={<Decaissement session={session} />} />
+                <Route path="sales-analytics" element={<SalesDashboard />} />
+                <Route path="historique" element={<StockHistory />} />
+                <Route path="conversions" element={<Conversions session={session} />} />
+                <Route path="depots" element={<Depots />} />
+                <Route path="stock-transfer" element={<StockTransfer />} />
+                <Route path="settings" element={<Settings session={session} />} />
+                <Route path="user-management" element={<UserManagement session={session} />} />
+              </>
+            )}
+
             <Route path="pos" element={<POS session={session} selectedDepotId={selectedDepotId} />} />
             <Route path="pos-simple" element={<POSSimple session={session} selectedDepotId={selectedDepotId} />} />
-            <Route path="restaurant-order" element={<OrderTaker session={session} selectedDepotId={selectedDepotId} />} />
-            <Route path="restaurant-kitchen" element={<KitchenMonitor session={session} />} />
-            <Route path="restaurant-pos" element={<RestaurantPOS session={session} selectedDepotId={selectedDepotId} />} />
-            <Route path="menus" element={<MenuManager />} />
-            <Route path="products" element={<ProductList />} />
-            <Route path="inventory" element={<Inventory selectedDepotId={selectedDepotId} />} />
-            <Route path="stock-entry" element={<StockEntry />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="clients" element={<Clients onViewCredit={handleViewClientCredit} />} />
-            <Route path="suppliers" element={<Suppliers />} />
-            <Route path="supplier-history" element={<SupplierCreditHistory />} />
-            <Route path="billing" element={<Billing 
-              initialSearchTerm={billingSearchTerm} 
-              onSearchReset={() => setBillingSearchTerm('')} 
-            />} />
-            <Route path="deadlines" element={<Deadlines 
-              initialSearchTerm={deadlineSearchTerm}
-              onSearchReset={() => setDeadlineSearchTerm('')}
-            />} />
-            <Route path="credit_history" element={<CreditHistory />} />
-            <Route path="supplier_credits" element={<SupplierCredits />} />
-            <Route path="decaissement" element={<Decaissement session={session} />} />
-            <Route path="sales-analytics" element={<SalesDashboard />} />
-            <Route path="historique" element={<StockHistory />} />
-            <Route path="conversions" element={<Conversions session={session} />} />
-            <Route path="depots" element={<Depots />} />
-            <Route path="stock-transfer" element={<StockTransfer />} />
-            <Route path="settings" element={<Settings session={session} />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
