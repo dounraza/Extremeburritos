@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS produits (
     quantite_par_unite INTEGER DEFAULT 1,
     unite_standard_id UUID,
     price_superior NUMERIC DEFAULT 0.00,
-    purchase_price NUMERIC DEFAULT 0.00
+    purchase_price NUMERIC DEFAULT 0.00,
+    type TEXT DEFAULT 'vente'
 );
 
 -- =====================================

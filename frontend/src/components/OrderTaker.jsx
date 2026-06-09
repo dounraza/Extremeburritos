@@ -47,11 +47,10 @@ export default function OrderTaker({ session, selectedDepotId }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch Products
+      // Fetch Products - Remove '.eq' on stocks to avoid hiding items without stock entry (like cuisine items)
       let { data: productsData } = await supabase
         .from('produits')
-        .select(`*, stocks!inner(*)`)
-        .eq('stocks.depot_id', selectedDepotId)
+        .select(`*, stocks(*)`)
         .order('name');
       
       // Fetch Menus
@@ -62,10 +61,14 @@ export default function OrderTaker({ session, selectedDepotId }) {
 
       let allItems = [];
       if (productsData) {
-        allItems = [...allItems, ...productsData.map(p => ({ 
+        // Only show 'vente' type products in the order taker as requested
+        allItems = [...allItems, ...productsData
+          .filter(p => p.type === 'vente' || !p.type)
+          .map(p => ({ 
             ...p, 
             type: 'product',
-            stock_quantity: p.stocks?.[0]?.quantity || 0 
+            type_prod: p.type || 'vente',
+            stock_quantity: p.stocks?.find(s => s.depot_id === selectedDepotId)?.quantity || 0 
         }))];
       }
       
@@ -270,7 +273,11 @@ export default function OrderTaker({ session, selectedDepotId }) {
                 >
                   <div className="flex justify-between items-start">
                     <div className="font-black uppercase text-xs md:text-base leading-tight line-clamp-2">{p.name}</div>
-                    {p.type === 'menu' && <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Menu</span>}
+                    <div className="flex flex-col items-end gap-1">
+                      {p.type === 'menu' && <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Menu</span>}
+                      {p.type === 'product' && p.type_prod === 'cuisine' && <span className="bg-orange-100 text-orange-600 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">Cuisine</span>}
+                      {p.type === 'product' && p.type_prod === 'vente' && <span className="bg-emerald-100 text-emerald-600 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">Vente</span>}
+                    </div>
                   </div>
                   <div className="mt-2 font-black text-lg md:text-2xl text-red-600">{p.price.toLocaleString()} <span className="text-[10px] md:text-xs">Ar</span></div>
                 </button>

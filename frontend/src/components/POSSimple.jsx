@@ -12,14 +12,18 @@ export default function POSSimple({ session, selectedDepotId }) {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Use normal join to allow products without stock entries to show up
       let query = supabase
         .from('produits')
-        .select(`*, stocks!inner(*)`)
-        .eq('stocks.depot_id', selectedDepotId)
+        .select(`*, stocks(*)`)
         .order('name');
       const { data } = await query;
       if (data) {
-        const formattedData = data.map(p => ({ ...p, stock_quantity: p.stocks?.[0]?.quantity || 0 }));
+        // Show all products in the simple POS
+        const formattedData = data.map(p => ({ 
+            ...p, 
+            stock_quantity: p.stocks?.find(s => s.depot_id === selectedDepotId)?.quantity || 0 
+          }));
         setProducts(formattedData);
         setFilteredProducts(formattedData);
       }

@@ -32,7 +32,7 @@ export default function KitchenMonitor({ session }) {
             if (item.item_type === 'product') {
                 const { data: prodData } = await supabase
                     .from('produits')
-                    .select('name')
+                    .select('name, type')
                     .eq('id', item.item_id)
                     .single();
                 return { ...item, produits: prodData };
@@ -42,7 +42,7 @@ export default function KitchenMonitor({ session }) {
                     .select('name')
                     .eq('id', item.item_id)
                     .single();
-                return { ...item, produits: menuData };
+                return { ...item, produits: { ...menuData, type: 'cuisine' } }; // Menus are always kitchen
             }
             return { ...item, produits: { name: 'Article Inconnu' } };
         }));
@@ -244,9 +244,16 @@ function OrderCard({ order, onAction, actionLabel, actionColor, onCancel }) {
         <div className="space-y-3">
           {order.commande_items?.map(item => (
             <div key={item.id} className="flex justify-between items-center gap-4">
-              <span className="font-bold text-gray-700 uppercase text-sm leading-tight flex-1">
-                {item.produits?.name || 'Menu/Article'}
-              </span>
+              <div className="flex flex-col flex-1">
+                <span className="font-bold text-gray-700 uppercase text-sm leading-tight">
+                  {item.produits?.name || 'Menu/Article'}
+                </span>
+                {item.produits?.type && (
+                  <span className={`text-[10px] font-black uppercase w-fit px-1 rounded-full mt-0.5 ${item.produits.type === 'cuisine' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                    {item.produits.type === 'cuisine' ? 'À Préparer' : 'Vente Immédiate'}
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="bg-gray-900 text-white px-2 py-1 rounded text-xs font-black shrink-0">
                   x{item.quantity}

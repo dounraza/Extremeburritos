@@ -24,10 +24,11 @@ export default function Inventory({ selectedDepotId }) {
   const [selectedProductForHistory, setSelectedProductForHistory] = useState(null); 
   const [stockMovements, setStockMovements] = useState([]); 
   const [selectedMovementProduct, setSelectedMovementProduct] = useState(''); 
-  const [formData, setFormData] = useState({ 
+  const [formData, setFormData] = useState({
     name: '', price: '', price_superior: '', purchase_price: '', stock_quantity: '', stock_quantity_base: '', category_id: '', fournisseur_id: '', description: '',
     unite_base: 'unité', unite_superieure: '', quantite_par_unite: 1,
-    unite_standard_id: ''
+    unite_standard_id: '',
+    type: 'vente'
   });
   const [editingProduct, setEditingProduct] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -263,7 +264,8 @@ export default function Inventory({ selectedDepotId }) {
       quantite_par_unite: parseInt(formData.quantite_par_unite) || 1,
       unite_base: formData.unite_base || 'unité',
       unite_superieure: formData.unite_superieure || '',
-      unite_standard_id: (formData.unite_standard_id && formData.unite_standard_id !== "") ? formData.unite_standard_id : null
+      unite_standard_id: (formData.unite_standard_id && formData.unite_standard_id !== "") ? formData.unite_standard_id : null,
+      type: formData.type || 'vente'
     };
 
     Object.keys(payload).forEach(key => payload[key] === null && delete payload[key]);
@@ -365,7 +367,8 @@ export default function Inventory({ selectedDepotId }) {
       unite_base: product.unite_base || 'unité',
       unite_superieure: product.unite_superieure || '',
       quantite_par_unite: product.quantite_par_unite || 1,
-      unite_standard_id: product.unite_standard_id || ''
+      unite_standard_id: product.unite_standard_id || '',
+      type: product.type || 'vente'
     });
     setShowModal(true);
   };
@@ -1228,19 +1231,28 @@ export default function Inventory({ selectedDepotId }) {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
+                    <label className="text-[14px] font-bold text-gray-400 uppercase ml-1">Type de Produit</label>
+                    <select required className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 outline-none text-base font-bold text-red-600" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                      <option value="vente">Vente (Immédiat)</option>
+                      <option value="cuisine">Cuisine (Préparation)</option>
+                      <option value="fournitures">Fournitures</option>
+                      <option value="autres">Autres</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
                     <label className="text-[14px] font-bold text-gray-400 uppercase ml-1">Catégorie</label>
                     <select className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 outline-none text-base font-bold text-gray-600" value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})}>
                       <option value="">Sélectionner...</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[14px] font-bold text-gray-400 uppercase ml-1">Fournisseur</label>
-                    <select className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 outline-none text-base font-bold text-gray-600" value={formData.fournisseur_id} onChange={e => setFormData({...formData, fournisseur_id: e.target.value})}>
-                      <option value="">Sélectionner...</option>
-                      {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
-                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[14px] font-bold text-gray-400 uppercase ml-1">Fournisseur</label>
+                  <select className="w-full bg-gray-50 border-0 rounded-xl px-4 py-3 outline-none text-base font-bold text-gray-600" value={formData.fournisseur_id} onChange={e => setFormData({...formData, fournisseur_id: e.target.value})}>
+                    <option value="">Sélectionner...</option>
+                    {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
                 </div>
               </div>
 

@@ -527,29 +527,29 @@ export default function POS({ session, selectedDepotId }) {
     };
     
     const fetchData = async () => {
-      // Fetch products and join with stocks table for the selected depot
+      // Fetch products - remove '.eq' on stocks to avoid hiding items without stock entry
       let query = supabase
         .from('produits')
         .select(`
           *,
           categories:categories(*),
-          stocks!inner(*)
+          stocks(*)
         `)
-        .eq('stocks.depot_id', selectedDepotId)
         .order('name');
 
       const { data, error } = await query;
-      
+
       if (error) {
         console.error("Error fetching products with stock:", error);
       }
 
       if (data) {
         // Map stock quantity from the joined stocks table
+        // Show all products in the POS
         const formattedData = data.map(p => ({
-          ...p,
-          stock_quantity: p.stocks?.[0]?.quantity || 0
-        }));
+            ...p,
+            stock_quantity: p.stocks?.find(s => s.depot_id === selectedDepotId)?.quantity || 0
+          }));
         setProducts(formattedData);
         setFilteredProducts(formattedData);
       }
@@ -748,7 +748,11 @@ export default function POS({ session, selectedDepotId }) {
                   {paginatedProducts.map(p => (
                     <tr key={p.id} onClick={() => Number(p.stock_quantity) > 0 && !pendingProductIds.has(p.id) && addToInvoice(p)} className="border-b border-gray-50 cursor-pointer hover:bg-gray-50">
                       <td className="p-2">
-                        <div className="font-black text-base uppercase">{p.name}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-black text-base uppercase">{p.name}</div>
+                          {p.type === 'cuisine' && <span className="text-[10px] font-black bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full uppercase">Cuisine</span>}
+                          {p.type === 'vente' && <span className="text-[10px] font-black bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase">Vente</span>}
+                        </div>
                         <div className="text-base text-gray-600 font-black">
                             {p.quantite_par_unite > 1 ? `${Math.floor(p.stock_quantity / p.quantite_par_unite)} ${p.unite_superieure || 'Sac'} + ${p.stock_quantity % p.quantite_par_unite} ${p.unite_base || 'Kg'}` : `${p.stock_quantity} ${p.unite_base || 'Pce'}`}
                         </div>
