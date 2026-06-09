@@ -461,7 +461,7 @@ export default function Billing({ initialSearchTerm, onSearchReset }) {
     invoiceElement.innerHTML = `
       <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #10b981; padding-bottom: 30px; margin-bottom: 40px;">
         <div style="flex: 1;">
-          <h1 style="font-size: 28px; font-weight: 900; color: #059669; margin: 0; text-transform: uppercase;">${depotInfo?.name || 'Extreme Burritos'}</h1>
+          <h1 style="font-size: 28px; font-weight: 900; color: #059669; margin: 0; text-transform: uppercase;">${depotInfo?.name || 'Extrême Buritos'}</h1>
           <p style="font-size: 14px; font-weight: 900; color: #374151; margin: 5px 0;">${depotInfo?.location || ''}</p>
           <p style="font-size: 12px; color: #6b7280; margin: 2px 0;">NIF: ${depotInfo?.nif || 'En cours'} | STAT: ${depotInfo?.stat || 'En cours'}</p>
           <p style="font-size: 12px; color: #6b7280; margin: 2px 0;">${depotInfo?.address || 'Madagascar'}</p>
@@ -947,7 +947,7 @@ export default function Billing({ initialSearchTerm, onSearchReset }) {
               <div id="printable-invoice" className="space-y-6">
                   <div className="flex justify-between items-start bg-red-600 p-8 rounded-t-2xl text-white">
                       <div>
-                          <h1 className="text-3xl font-black uppercase text-white">Extreme Burritos</h1>
+                          <h1 className="text-3xl font-black uppercase text-white">Extrême Buritos</h1>
                           <p className="text-sm font-bold opacity-90">Antananarivo</p>
                       </div>
                       <div className="text-right">
@@ -1066,7 +1066,7 @@ export default function Billing({ initialSearchTerm, onSearchReset }) {
               <div className="text-[10pt] leading-tight p-2 space-y-8">
                 <div id="printable-invoice">
                     <div className="text-center mb-4 border-b border-dashed border-black pb-2">
-                        <h1 className="text-xl font-black uppercase text-red-600">Extreme Burritos</h1>
+                        <h1 className="text-xl font-black uppercase text-red-600">Extrême Buritos</h1>
                         <p>Facture: <span className="font-bold">{viewingInvoice.number}</span></p>
                         <p>Date: {new Date(viewingInvoice.created_at).toLocaleDateString()} {new Date(viewingInvoice.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                         <p>Client: <span className="font-bold">{viewingInvoice.clients?.name || viewingInvoice.guest_name || 'Anonyme'}</span></p>

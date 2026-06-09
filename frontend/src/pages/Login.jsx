@@ -58,7 +58,7 @@ export default function Login() {
               <img src="/logo.jpeg" alt="Logo" className="w-24 h-32 rounded-3xl object-cover shadow-xl shadow-black/50" />
             </div>
             <h2 className="text-3xl font-bold tracking-tight">
-              <span className="text-white">Extreme</span><span className="text-red-600"> Burritos</span>
+              <span className="text-white">Extrême</span><span className="text-red-600"> Buritos</span>
             </h2>
             <p className="mt-1 text-gray-400 text-lg">
               Logiciel de gestion Restaurant
@@ -124,7 +124,7 @@ export default function Login() {
         </div>
         
         <p className="mt-8 text-center text-base text-gray-400 font-medium">
-          © 2026 Extreme Burritos — Système d'Inventaire
+          © 2026 Extrême Buritos — Système d'Inventaire
         </p>
       </div>
     </div>

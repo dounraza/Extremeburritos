@@ -256,7 +256,7 @@ export default function Dashboard({ session }) {
           <div className="flex items-center justify-between mb-10">
             <div onClick={() => navigate('/dashboard')} className="cursor-pointer flex items-center gap-3">
               <img src="/logo.jpeg" alt="Logo" className="w-12 h-12 rounded-xl object-cover shadow-lg shadow-red-900/20" />
-              <h1 className="text-3xl font-bold text-white tracking-tight">Extreme<span className="text-red-600">Burritos</span></h1>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Extrême<span className="text-red-600">Buritos</span></h1>
             </div>
             <button className="lg:hidden text-gray-400 hover:text-red-600" onClick={closeSidebar}>
               <X size={24} />
@@ -278,7 +278,7 @@ export default function Dashboard({ session }) {
 
             {/* RESTAURANT SECTION */}
             <div>
-              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Restaurant Extreme Burritos</p>
+              <p className="text-[14px] font-black text-gray-500 uppercase tracking-widest mb-3 px-4">Restaurant Extrême Buritos</p>
               <div className="space-y-1">
                  <NavItem icon={<LayoutDashboard size={20} />} label="Gestion Menus" active={activeTab === 'menus'} onClick={() => { navigate('/dashboard/menus'); closeSidebar(); }} />
                 <NavItem icon={<Utensils size={20} />} label="Prise de Commande" active={activeTab === 'restaurant-order'} onClick={() => { navigate('/dashboard/restaurant-order'); closeSidebar(); }} />
