@@ -1,0 +1,1 @@
+﻿ALTER TABLE public.delivery_notes ADD COLUMN IF NOT EXISTS type VARCHAR(20) DEFAULT 'in';

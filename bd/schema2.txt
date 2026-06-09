@@ -1,0 +1,213 @@
+-- =====================================
+-- AJOUT DES COLONNES MANQUANTES FACTURES
+-- =====================================
+
+ALTER TABLE factures
+ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'COMPTANT',
+ADD COLUMN IF NOT EXISTS payment_mode TEXT,
+ADD COLUMN IF NOT EXISTS advance_amount DOUBLE PRECISION DEFAULT 0,
+ADD COLUMN IF NOT EXISTS frequency TEXT,
+ADD COLUMN IF NOT EXISTS depot_id TEXT;
+
+-- =====================================
+-- FOURNISSEURS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS fournisseurs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    local_etranger VARCHAR(20),
+    raison_sociale VARCHAR(255),
+    nif VARCHAR(50),
+    stat VARCHAR(50),
+    rcs VARCHAR(50)
+);
+
+-- =====================================
+-- PRODUITS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS produits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    price NUMERIC NOT NULL DEFAULT 0,
+    stock_quantity INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    category_id UUID,
+    fournisseur_id UUID,
+    unite_base VARCHAR(50),
+    unite_superieure VARCHAR(50),
+    quantite_par_unite INTEGER DEFAULT 1,
+    unite_standard_id UUID,
+    price_superior NUMERIC DEFAULT 0.00,
+    purchase_price NUMERIC DEFAULT 0.00
+);
+
+-- =====================================
+-- PROFILES
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS profiles (
+    id UUID PRIMARY KEY,
+    full_name TEXT,
+    company_name TEXT,
+    updated_at TIMESTAMPTZ
+);
+
+-- =====================================
+-- HISTORIQUE
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS historique (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    action TEXT NOT NULL,
+    module TEXT NOT NULL,
+    target_id TEXT,
+    details JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    user_id UUID
+);
+
+-- =====================================
+-- PAIEMENTS CLIENTS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS paiements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    facture_id UUID,
+    montant NUMERIC NOT NULL,
+    date_paiement TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    type_paiement VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    method VARCHAR(50),
+    reference VARCHAR(100),
+    delivery_note_id UUID
+);
+
+-- =====================================
+-- REMISES
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS remises (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    facture_id UUID NOT NULL,
+    facture_number VARCHAR(50),
+    produit_id UUID,
+    facture_item_id UUID,
+    type_remise VARCHAR(20) NOT NULL,
+    valeur NUMERIC NOT NULL,
+    type_valeur VARCHAR(10) NOT NULL,
+    montant_calcule NUMERIC NOT NULL,
+    user_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    date DATE DEFAULT CURRENT_DATE,
+    month INTEGER,
+    year INTEGER
+);
+
+-- =====================================
+-- MOUVEMENTS DE STOCK
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS stock_movements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    product_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    type TEXT NOT NULL,
+    quantity INTEGER NOT NULL,
+    reason TEXT,
+    price_at_movement NUMERIC DEFAULT 0,
+    destination_depot VARCHAR(100) DEFAULT 'Magasin Principal',
+    depot_id TEXT
+);
+
+-- =====================================
+-- TRANSFERTS DE STOCK
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS stock_transfers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    bt_number VARCHAR(50),
+    source_depot_id UUID,
+    dest_depot_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE TABLE IF NOT EXISTS stock_transfer_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    transfer_id UUID,
+    product_id UUID,
+    quantity NUMERIC NOT NULL
+);
+
+-- =====================================
+-- STOCKS PAR DEPOT
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS stocks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID,
+    depot_id UUID,
+    quantity NUMERIC DEFAULT 0,
+    purchase_price NUMERIC DEFAULT 0.00
+);
+
+-- =====================================
+-- PAIEMENTS FOURNISSEURS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS supplier_payments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    delivery_note_id UUID NOT NULL,
+    amount NUMERIC NOT NULL,
+    payment_date TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    payment_method VARCHAR(50),
+    notes TEXT,
+    user_id UUID,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+-- =====================================
+-- UNITES STANDARDS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS unites_standards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    nom TEXT NOT NULL,
+    unite_mesure TEXT,
+    facteur NUMERIC NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+-- =====================================
+-- CONVERSIONS UNITES
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS unites_conversion (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id UUID NOT NULL,
+    unite_secondaire TEXT NOT NULL,
+    facteur NUMERIC NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+-- =====================================
+-- ROLES UTILISATEURS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS user_roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    depot_id UUID,
+    role VARCHAR(50) DEFAULT 'user'
+);

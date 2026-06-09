@@ -1,0 +1,23 @@
+CREATE INDEX idx_clients_user_id
+ON clients(user_id);
+
+CREATE INDEX idx_factures_client_id
+ON factures(client_id);
+
+CREATE INDEX idx_factures_user_id
+ON factures(user_id);
+
+CREATE INDEX idx_facture_items_facture_id
+ON facture_items(facture_id);
+
+CREATE INDEX idx_echeances_facture_id
+ON echeances_details(facture_id);
+
+CREATE INDEX idx_delivery_note_items_delivery_note_id
+ON delivery_note_items(delivery_note_id);
+
+CREATE INDEX idx_daily_closures_date
+ON daily_closures(closure_date);
+
+CREATE INDEX idx_decaissements_date
+ON decaissements(date_decaissement);

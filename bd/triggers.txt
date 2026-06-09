@@ -1,0 +1,49 @@
+CREATE OR REPLACE FUNCTION public.handle_new_client_from_invoice()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_client_id UUID;
+BEGIN
+
+    IF NEW.guest_contact IS NOT NULL
+       AND NEW.guest_contact <> '' THEN
+
+        SELECT id
+        INTO v_client_id
+        FROM public.clients
+        WHERE phone = NEW.guest_contact
+        LIMIT 1;
+
+        IF v_client_id IS NULL THEN
+
+            INSERT INTO public.clients (
+                name,
+                phone
+            )
+            VALUES (
+                COALESCE(NEW.guest_name, 'Client Anonyme'),
+                NEW.guest_contact
+            )
+            RETURNING id INTO v_client_id;
+
+        END IF;
+
+        NEW.client_id := v_client_id;
+
+    END IF;
+
+    RETURN NEW;
+
+END;
+$$;
+
+CREATE TRIGGER tr_add_client_from_invoice
+BEFORE INSERT OR UPDATE
+ON public.factures
+FOR EACH ROW
+WHEN (
+    NEW.guest_contact IS NOT NULL
+    AND NEW.guest_contact <> ''
+)
+EXECUTE FUNCTION public.handle_new_client_from_invoice();

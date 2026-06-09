@@ -1,0 +1,204 @@
+-- Permissions
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.admin_settings TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.categories TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.clients TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.daily_closures TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.decaissements TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.delivery_note_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.delivery_notes TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.depots TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.echeances_details TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.facture_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.factures TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.fournisseurs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.historique TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.paiements TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.produits TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.remises TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.stock_movements TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.stock_transfer_items TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.stock_transfers TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.stocks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.supplier_payments TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.unites_conversion TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.unites_standards TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.user_roles TO authenticated;
+
+-- RLS
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_closures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.decaissements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.delivery_note_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.delivery_notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.depots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.echeances_details ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.facture_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.factures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.fournisseurs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.historique ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.paiements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.produits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.remises ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_transfer_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stock_transfers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.supplier_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.unites_conversion ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.unites_standards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+CREATE POLICY "Enable all for authenticated users on admin_settings"
+ON public.admin_settings FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on categories"
+ON public.categories FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on clients"
+ON public.clients FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on daily_closures"
+ON public.daily_closures FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on decaissements"
+ON public.decaissements FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on delivery_note_items"
+ON public.delivery_note_items FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on delivery_notes"
+ON public.delivery_notes FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on depots"
+ON public.depots FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on echeances_details"
+ON public.echeances_details FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on facture_items"
+ON public.facture_items FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on factures"
+ON public.factures FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on fournisseurs"
+ON public.fournisseurs FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on historique"
+ON public.historique FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on paiements"
+ON public.paiements FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on produits"
+ON public.produits FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on profiles"
+ON public.profiles FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on remises"
+ON public.remises FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on stock_movements"
+ON public.stock_movements FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on stock_transfer_items"
+ON public.stock_transfer_items FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on stock_transfers"
+ON public.stock_transfers FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on stocks"
+ON public.stocks FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on supplier_payments"
+ON public.supplier_payments FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on unites_conversion"
+ON public.unites_conversion FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on unites_standards"
+ON public.unites_standards FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "Enable all for authenticated users on user_roles"
+ON public.user_roles FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);

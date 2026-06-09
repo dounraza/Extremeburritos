@@ -1,0 +1,59 @@
+ALTER TABLE produits
+ADD CONSTRAINT fk_produit_categorie
+FOREIGN KEY (category_id) REFERENCES categories(id);
+
+ALTER TABLE produits
+ADD CONSTRAINT fk_produit_fournisseur
+FOREIGN KEY (fournisseur_id) REFERENCES fournisseurs(id);
+
+ALTER TABLE facture_items
+ADD CONSTRAINT fk_facture_item_produit
+FOREIGN KEY (produit_id) REFERENCES produits(id);
+
+ALTER TABLE delivery_note_items
+ADD CONSTRAINT fk_delivery_item_product
+FOREIGN KEY (product_id) REFERENCES produits(id);
+
+ALTER TABLE delivery_notes
+ADD CONSTRAINT fk_delivery_supplier
+FOREIGN KEY (supplier_id) REFERENCES fournisseurs(id);
+
+ALTER TABLE paiements
+ADD CONSTRAINT fk_paiement_facture
+FOREIGN KEY (facture_id) REFERENCES factures(id);
+
+ALTER TABLE remises
+ADD CONSTRAINT fk_remise_facture
+FOREIGN KEY (facture_id) REFERENCES factures(id);
+
+ALTER TABLE stocks
+ADD CONSTRAINT fk_stock_product
+FOREIGN KEY (product_id) REFERENCES produits(id);
+
+ALTER TABLE stocks
+ADD CONSTRAINT fk_stock_depot
+FOREIGN KEY (depot_id) REFERENCES depots(id);
+
+ALTER TABLE stock_movements
+ADD CONSTRAINT fk_stock_movement_product
+FOREIGN KEY (product_id) REFERENCES produits(id);
+
+ALTER TABLE stock_transfer_items
+ADD CONSTRAINT fk_transfer
+FOREIGN KEY (transfer_id) REFERENCES stock_transfers(id);
+
+ALTER TABLE stock_transfer_items
+ADD CONSTRAINT fk_transfer_product
+FOREIGN KEY (product_id) REFERENCES produits(id);
+
+ALTER TABLE supplier_payments
+ADD CONSTRAINT fk_supplier_payment_delivery
+FOREIGN KEY (delivery_note_id) REFERENCES delivery_notes(id);
+
+ALTER TABLE unites_conversion
+ADD CONSTRAINT fk_conversion_product
+FOREIGN KEY (product_id) REFERENCES produits(id);
+
+ALTER TABLE produits
+ADD CONSTRAINT fk_unite_standard
+FOREIGN KEY (unite_standard_id) REFERENCES unites_standards(id);
